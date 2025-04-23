@@ -1,9 +1,27 @@
-let apiBaseUrl = 'https://api-notas-production.up.railway.app';
+
+let apiBaseUrl = '';
+
+// Cargar configuración desde config.xml
+async function cargarConfiguracion() {
+  try {
+    const response = await fetch('config.xml');
+    const xmlText = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+    apiBaseUrl = xmlDoc.getElementsByTagName('apiBaseUrl')[0].textContent;
+    console.log('API base URL cargada:', apiBaseUrl);
+  } catch (err) {
+    console.error('Error al cargar configuración:', err);
+    alert('No se pudo cargar la configuración del sistema.');
+  }
+}
 
 // Cargar perfil al iniciar
 window.onload = function () {
-  cargarPerfil();
-  cargarMaterias();
+  cargarConfiguracion().then(() => {
+    cargarPerfil();
+    cargarMaterias();
+  });
 };
 
 // Cargar datos del perfil
@@ -16,6 +34,12 @@ async function cargarPerfil() {
       headers: { 'Authorization': `Bearer ${token}` }
     });
 
+    if (!response.ok) {
+      console.error('Error en la respuesta del servidor:', response.status, await response.text());
+      alert('Error al cargar perfil');
+      return;
+    }
+
     const data = await response.json();
     document.getElementById('perfilNombre').textContent = data.name || 'Sin nombre';
     document.getElementById('perfilEmail').textContent = data.email || 'Sin correo';
@@ -24,7 +48,6 @@ async function cargarPerfil() {
 
     if (rol === '0') {
       cargarMaterias();
-      cargarCalificaciones(); // Asegúrate de tener esta función si es necesario
     }
 
     document.title = `Sistema ${rol === '1' ? 'Profesor' : 'Alumno'}`;
@@ -38,6 +61,13 @@ async function cargarMaterias() {
   try {
     const userId = localStorage.getItem('userId');
     const response = await fetch(`${apiBaseUrl}/api/subjects`);
+
+    if (!response.ok) {
+      console.error('Error en la respuesta del servidor:', response.status, await response.text());
+      alert('Error al cargar materias');
+      return;
+    }
+
     const data = await response.json();
 
     if (Array.isArray(data.subjects)) {
@@ -191,28 +221,5 @@ async function guardarNota(event) {
   } catch (error) {
     console.error('Error al guardar nota:', error);
     alert('Ocurrió un error al guardar la nota');
-  }
-}
-
-// Eliminar nota
-async function eliminarNota(notaId, materiaId) {
-  if (!notaId) return alert('No se encontró una nota para eliminar.');
-
-  if (confirm('¿Estás seguro de que deseas eliminar esta nota?')) {
-    try {
-      const response = await fetch(`${apiBaseUrl}/api/grades/${notaId}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        alert('Nota eliminada exitosamente');
-        verAlumnos(materiaId);
-      } else {
-        alert('Error al eliminar la nota');
-      }
-    } catch (error) {
-      console.error('Error al eliminar nota:', error);
-      alert('Ocurrió un error al eliminar la nota');
-    }
   }
 }
