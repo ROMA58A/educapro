@@ -91,7 +91,6 @@ async function verAlumnos(materiaId) {
             <div>
               <button class="btn btn-success btn-sm me-1" onclick="abrirModalNota(${alumno.id}, ${materiaId}, ${notaData.grade ?? ''})">Subir Nota</button>
               <button class="btn btn-warning btn-sm me-1" onclick="abrirModalActualizarNota(${alumno.id}, ${materiaId}, ${notaData.id ?? null}, ${notaData.grade ?? ''})">Actualizar</button>
-              <button class="btn btn-danger btn-sm" onclick="eliminarNota(${notaData.id ?? null}, ${materiaId})">Eliminar</button>
             </div>
           </div>`;
       }
